@@ -1,17 +1,18 @@
-module HSBlog.Html (
-  Html,
-  Title,
-  Structure,
-  html_,
-  empty_,
-  p_,
-  h_,
-  ul_,
-  ol_,
-  code_,
-  -- append_,
-  render,
-) where
+module HSBlog.Html
+  ( Html,
+    Title,
+    Structure,
+    html_,
+    empty_,
+    p_,
+    h_,
+    ul_,
+    ol_,
+    code_,
+    -- append_,
+    render,
+  )
+where
 
 import Numeric.Natural
 
@@ -26,16 +27,14 @@ getStructureString (Structure s) = s
 
 escape :: String -> String
 escape =
-  let
-    escapeChar c = case c of
-      '<' -> "&lt;"
-      '>' -> "&gt;"
-      '&' -> "&amp;"
-      '"' -> "&quot;"
-      '\'' -> "&#39;"
-      _ -> [c]
-   in
-    concatMap escapeChar
+  let escapeChar c = case c of
+        '<' -> "&lt;"
+        '>' -> "&gt;"
+        '&' -> "&amp;"
+        '"' -> "&quot;"
+        '\'' -> "&#39;"
+        _ -> [c]
+   in concatMap escapeChar
 
 el :: String -> String -> String
 el tag content = "<" <> tag <> ">" <> content <> "</" <> tag <> ">"
@@ -55,7 +54,13 @@ render (Html html) = html
 
 html_ :: Title -> Structure -> Html
 html_ title (Structure content) =
-  Html (el "head" (el "title" (escape title)) <> el "body" content)
+  Html
+    ( el
+        "html"
+        ( el "head" (el "title" (escape title))
+            <> el "body" content
+        )
+    )
 
 empty_ :: Structure
 empty_ = Structure ""
