@@ -3,9 +3,9 @@ cabal-version: 2.4
 name: hs-blog
 version: 0.1.0.0
 synopsis: A custom blog generator from markup files
-description: following along with the LHBG book
-homepage: https://github.com/soupi/learn-haskell-blog-generator
-bug-reports: https://github.com/soupi/learn-haskell-blog-generator/issues
+description: yes, a blog generator
+homepage: https://github.com/dylantf/blog-generator
+bug-reports: https://github.com/dylantf/blog-generator/issues
 license: BSD-3-Clause
 license-file: LICENSE.txt
 author: dylan
