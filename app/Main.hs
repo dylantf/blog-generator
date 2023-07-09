@@ -1,39 +1,49 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Use lambda-case" #-}
+{-# HLINT ignore "Use when" #-}
+
 module Main (main) where
 
-import Html
-import Markup
+import Convert (convert)
+import Html qualified
+import Markup qualified
+import System.Directory (doesFileExist)
+import System.Environment (getArgs)
 
-myHtml :: Html
-myHtml =
-  html_
-    "Hello title"
-    (h_ 1 "Hello, world?" <> p_ "My first blog")
+process :: Html.Title -> String -> String
+process title = Html.render . convert title . Markup.parse
 
 main :: IO ()
-main = putStrLn (render myHtml)
+main =
+  getArgs >>= \args ->
+    case args of
+      [] -> do
+        content <- getContents
+        putStrLn $ process "No title" content
+      [input, output] -> do
+        content <- readFile input
+        exists <- doesFileExist output
+        let writeResult = writeFile output (process input content)
+        if exists
+          then whenIO confirm writeResult
+          else writeResult
+      _ -> putStrLn "Usage: stack run [-- <input-file> <output-file>]"
 
-myDocument :: Document
-myDocument =
-  [ Heading 1 "Compiling programs with GHC"
-  , Paragraph "Running `ghc` invokes the Glasgow Haskell Compiler (GHC)"
-  , Paragraph "Create a new Haskell source file named hello.hs, and write the following:"
-  , CodeBlock ["main = putStrLn \"Hello, Haskell!\""]
-  , Paragraph "Now, we can compile the program by invoking ghc:"
-  , CodeBlock
-      [ "$ ghc hello.hs"
-      , "[1 of 1] Compiling Main (hello.hs, hello.o)"
-      , "Linking hello ..."
-      ]
-  , Paragraph "GHC created the following files:"
-  , UnorderedList
-      [ "hello.hi - Haskell interface file"
-      , "hello.o - Object file, the output of the compiler before linking"
-      , "hello (or hello.exe on Windows) - A native runnable executable"
-      ]
-  , Paragraph "GHC will produce an executable when the source file satisfies both conditions:"
-  , OrderedList
-      [ "Defines the main function in the source file"
-      , "Defines the module name to be Main or does not have a module declaration"
-      ]
-  , Paragraph "Otherwise, it will only produce the .o and .hi files."
-  ]
+whenIO :: IO Bool -> IO () -> IO ()
+whenIO cond action = do
+  result <- cond
+  if result
+    then action
+    else pure ()
+
+confirm :: IO Bool
+confirm = do
+  putStrLn "Are you sure? (y/n)"
+  input <- getLine
+  case input of
+    "y" -> pure True
+    "n" -> pure False
+    _ -> do
+      putStrLn "Invalid response. Use y or n"
+      confirm

@@ -1,4 +1,4 @@
-module Convert () where
+module Convert (convert) where
 
 import Html qualified
 import Markup qualified
