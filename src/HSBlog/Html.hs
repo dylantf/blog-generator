@@ -1,4 +1,4 @@
-module Html (
+module HSBlog.Html (
   Html,
   Title,
   Structure,
