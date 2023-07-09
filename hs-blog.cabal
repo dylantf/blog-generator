@@ -25,8 +25,9 @@ library
   import: common-settings
   hs-source-dirs: src
   build-depends:
-      base
-    , directory
+    base,
+    optparse-applicative,
+    directory
   exposed-modules:
     HSBlog
       HSBlog.Convert
@@ -40,6 +41,7 @@ executable hs-blog-gen
   main-is: Main.hs
   build-depends:
     base,
+    optparse-applicative,
     hs-blog
   ghc-options:
     -O
