@@ -7,7 +7,7 @@ myHtml :: Html
 myHtml =
   html_
     "Hello title"
-    (h1_ "Hello, world?" <> p_ "My first blog")
+    (h_ 1 "Hello, world?" <> p_ "My first blog")
 
 main :: IO ()
 main = putStrLn (render myHtml)
@@ -37,6 +37,3 @@ myDocument =
       ]
   , Paragraph "Otherwise, it will only produce the .o and .hi files."
   ]
-
-trim :: String -> String
-trim = unwords . words

@@ -3,14 +3,17 @@ module Html (
   Title,
   Structure,
   html_,
+  empty_,
   p_,
-  h1_,
+  h_,
   ul_,
   ol_,
   code_,
   -- append_,
   render,
 ) where
+
+import Numeric.Natural
 
 newtype Html = Html String
 
@@ -44,6 +47,9 @@ el tag content = "<" <> tag <> ">" <> content <> "</" <> tag <> ">"
 instance Semigroup Structure where
   (<>) (Structure a) (Structure b) = Structure (a <> b)
 
+instance Monoid Structure where
+  mempty = empty_
+
 render :: Html -> String
 render (Html html) = html
 
@@ -51,11 +57,14 @@ html_ :: Title -> Structure -> Html
 html_ title (Structure content) =
   Html (el "head" (el "title" (escape title)) <> el "body" content)
 
+empty_ :: Structure
+empty_ = Structure ""
+
 p_ :: String -> Structure
 p_ = Structure . el "p" . escape
 
-h1_ :: String -> Structure
-h1_ = Structure . el "h1" . escape
+h_ :: Natural -> String -> Structure
+h_ level = Structure . el ("h" <> show level) . escape
 
 ul_ :: [Structure] -> Structure
 ul_ = Structure . el "ul" . concatMap (el "li" . getStructureString)
@@ -65,3 +74,8 @@ ol_ = Structure . el "ol" . concatMap (el "li" . getStructureString)
 
 code_ :: String -> Structure
 code_ = Structure . el "pre" . escape
+
+concatStructure :: [Structure] -> Structure
+concatStructure list = case list of
+  [] -> mempty
+  x : xs -> x <> concatStructure xs
