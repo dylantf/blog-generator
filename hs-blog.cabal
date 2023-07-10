@@ -32,9 +32,10 @@ library
   exposed-modules:
     HSBlog
       HSBlog.Convert
+      HSBlog.Env
+      HSBlog.Directory
       HSBlog.Html
       HSBlog.Markup
-      HSBlog.Directory
   -- other-modules:
 
 executable hs-blog-gen

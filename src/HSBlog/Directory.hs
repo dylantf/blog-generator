@@ -4,6 +4,7 @@ import Control.Exception (SomeException (..), catch, displayException)
 import Control.Monad (void, when)
 import Data.List (partition)
 import HSBlog.Convert (convert, convertStructure)
+import HSBlog.Env (Env (..))
 import HSBlog.Html qualified as Html
 import HSBlog.Markup qualified as Markup
 import System.Directory (copyFile, createDirectory, doesDirectoryExist, listDirectory, removeDirectoryRecursive)
@@ -11,8 +12,8 @@ import System.Exit (exitFailure)
 import System.FilePath (takeBaseName, takeExtension, takeFileName, (<.>), (</>))
 import System.IO (hPutStrLn, stderr)
 
-buildIndex :: [(FilePath, Markup.Document)] -> Html.Html
-buildIndex files =
+buildIndex :: Env -> [(FilePath, Markup.Document)] -> Html.Html
+buildIndex env files =
   let makePreview (file, doc) = case doc of
         Markup.Heading 1 heading : article ->
           Html.h_ 3 (Html.link_ file (Html.txt_ heading))
@@ -22,17 +23,17 @@ buildIndex files =
           Html.h_ 3 (Html.link_ file (Html.txt_ file))
       previews = foldMap makePreview files
    in Html.html_
-        "Blog"
+        (Html.title_ (eBlogName env) <> Html.stylesheet_ (eStylesheetPath env))
         ( Html.h_ 1 (Html.link_ "index.html" (Html.txt_ "Blog"))
             <> Html.h_ 2 (Html.txt_ "Posts")
             <> previews
         )
 
-convertDirectory :: FilePath -> FilePath -> IO ()
-convertDirectory inputDir outputDir = do
+convertDirectory :: Env -> FilePath -> FilePath -> IO ()
+convertDirectory env inputDir outputDir = do
   DirContents filesToProcess filesToCopy <- getDirFilesAndContent inputDir
   createOutputDirectoryOrExit outputDir
-  let outputFiles = txtsToRenderedHtml filesToProcess
+  let outputFiles = txtsToRenderedHtml env filesToProcess
   copyFiles outputDir filesToCopy
   writeFiles outputDir outputFiles
   putStrLn "Done!"
@@ -105,18 +106,18 @@ confirm message = do
       putStrLn "Invalid response. Use y or n"
       confirm message
 
-txtsToRenderedHtml :: [(FilePath, String)] -> [(FilePath, String)]
-txtsToRenderedHtml txtFiles =
+txtsToRenderedHtml :: Env -> [(FilePath, String)] -> [(FilePath, String)]
+txtsToRenderedHtml env txtFiles =
   let txtOutputFiles = map toOutputMarkupFile txtFiles
-      index = ("index.html", buildIndex txtOutputFiles)
-   in map (fmap Html.render) (index : map convertFile txtOutputFiles)
+      index = ("index.html", buildIndex env txtOutputFiles)
+   in map (fmap Html.render) (index : map (convertFile env) txtOutputFiles)
 
 toOutputMarkupFile :: (FilePath, String) -> (FilePath, Markup.Document)
 toOutputMarkupFile (file, content) =
   (takeBaseName file <.> "html", Markup.parse content)
 
-convertFile :: (FilePath, Markup.Document) -> (FilePath, Html.Html)
-convertFile (file, doc) = (file, convert file doc)
+convertFile :: Env -> (FilePath, Markup.Document) -> (FilePath, Html.Html)
+convertFile env (file, doc) = (file, convert env file doc)
 
 -- Copy files to a directory and log errors to stderr
 copyFiles :: FilePath -> [FilePath] -> IO ()

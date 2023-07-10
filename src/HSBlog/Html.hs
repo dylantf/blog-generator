@@ -2,8 +2,11 @@ module HSBlog.Html
   ( Html,
     Title,
     Structure,
-    html_,
     empty_,
+    html_,
+    title_,
+    stylesheet_,
+    meta_,
     p_,
     h_,
     ul_,
@@ -28,6 +31,20 @@ newtype Content = Content String
 
 type Title = String
 
+newtype Head = Head String
+
+instance Semigroup Structure where
+  (<>) (Structure a) (Structure b) = Structure (a <> b)
+
+instance Monoid Structure where
+  mempty = empty_
+
+instance Semigroup Head where
+  (<>) (Head a) (Head b) = Head (a <> b)
+
+instance Monoid Head where
+  mempty = Head ""
+
 getStructureString :: Structure -> String
 getStructureString (Structure s) = s
 
@@ -45,8 +62,45 @@ escape =
         _ -> [c]
    in concatMap escapeChar
 
+el :: String -> String -> String
+el tag content = "<" <> tag <> ">" <> content <> "</" <> tag <> ">"
+
+elAttr :: String -> String -> String -> String
+elAttr tag attrs content =
+  "<" <> tag <> " " <> attrs <> ">" <> content <> "</" <> tag <> ">"
+
+render :: Html -> String
+render (Html html) = html
+
+empty_ :: Structure
+empty_ = Structure ""
+
 txt_ :: String -> Content
 txt_ = Content . escape
+
+html_ :: Head -> Structure -> Html
+html_ (Head headEl) content =
+  Html
+    ( el
+        "html"
+        ( el "head" headEl
+            <> el "body" (getStructureString content)
+        )
+    )
+
+-- Head elements
+
+title_ :: String -> Head
+title_ = Head . el "title" . escape
+
+stylesheet_ :: FilePath -> Head
+stylesheet_ path = Head $ "<link rel=\"stylesheet\" type=\"text/css\" href=\"" <> escape path <> "\" />"
+
+meta_ :: String -> String -> Head
+meta_ name content =
+  Head $ "<meta name=\"" <> escape name <> "\" content=\"" <> escape content <> "\" />"
+
+-- Body elements
 
 link_ :: FilePath -> Content -> Content
 link_ path (Content content) =
@@ -61,39 +115,6 @@ b_ (Content content) = Content $ el "b" content
 
 i_ :: Content -> Content
 i_ (Content content) = Content $ el "i" content
-
-el :: String -> String -> String
-el tag content = "<" <> tag <> ">" <> content <> "</" <> tag <> ">"
-
-elAttr :: String -> String -> String -> String
-elAttr tag attrs content =
-  "<" <> tag <> " " <> attrs <> ">" <> content <> "</" <> tag <> ">"
-
--- Replaced with Semigroup instance definition
--- append_ :: Structure -> Structure -> Structure
--- append_ (Structure a) (Structure b) = Structure (a <> b)
-
-instance Semigroup Structure where
-  (<>) (Structure a) (Structure b) = Structure (a <> b)
-
-instance Monoid Structure where
-  mempty = empty_
-
-render :: Html -> String
-render (Html html) = html
-
-html_ :: Title -> Structure -> Html
-html_ title (Structure content) =
-  Html
-    ( el
-        "html"
-        ( el "head" (el "title" (escape title))
-            <> el "body" content
-        )
-    )
-
-empty_ :: Structure
-empty_ = Structure ""
 
 p_ :: Content -> Structure
 p_ = Structure . el "p" . escape . getContentString

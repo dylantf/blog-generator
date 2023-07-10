@@ -3,6 +3,7 @@ module Main where
 import GHC.IO
 import HSBlog (convertSingle)
 import HSBlog.Directory (confirm, convertDirectory)
+import HSBlog.Env (defaultEnv)
 import OptParse
 import System.Directory (doesFileExist)
 import System.Exit (exitFailure)
@@ -13,7 +14,7 @@ main = do
   options <- parse
   case options of
     ConvertDir input output ->
-      convertDirectory input output
+      convertDirectory defaultEnv input output
     ConvertSingle input output -> do
       let withInputHandle :: (String -> Handle -> IO a) -> IO a
           withInputHandle action =
@@ -40,5 +41,5 @@ main = do
                   else exitFailure
        in withInputHandle
             ( \title ->
-                withOutputHandle . convertSingle title
+                withOutputHandle . convertSingle defaultEnv title
             )
