@@ -1,7 +1,7 @@
 module HSBlog.Directory (convertDirectory, buildIndex, confirm) where
 
 import Control.Exception (SomeException (..), catch, displayException)
-import Control.Monad (void, when)
+import Control.Monad.Reader
 import Data.List (partition)
 import HSBlog.Convert (convert, convertStructure)
 import HSBlog.Env (Env (..))
@@ -12,30 +12,33 @@ import System.Exit (exitFailure)
 import System.FilePath (takeBaseName, takeExtension, takeFileName, (<.>), (</>))
 import System.IO (hPutStrLn, stderr)
 
-buildIndex :: Env -> [(FilePath, Markup.Document)] -> Html.Html
-buildIndex env files =
-  let makePreview (file, doc) = case doc of
-        Markup.Heading 1 heading : article ->
-          Html.h_ 3 (Html.link_ file (Html.txt_ heading))
-            <> foldMap convertStructure (take 3 article)
-            <> Html.p_ (Html.link_ file (Html.txt_ "..."))
-        _ ->
-          Html.h_ 3 (Html.link_ file (Html.txt_ file))
+buildIndex :: [(FilePath, Markup.Document)] -> Reader Env Html.Html
+buildIndex files = do
+  env <- ask
+  let makePreview (file, doc) =
+        case doc of
+          Markup.Heading 1 heading : article ->
+            Html.h_ 3 (Html.link_ file (Html.txt_ heading))
+              <> foldMap convertStructure (take 3 article)
+              <> Html.p_ (Html.link_ file (Html.txt_ "..."))
+          _ ->
+            Html.h_ 3 (Html.link_ file (Html.txt_ file))
       previews = foldMap makePreview files
-   in Html.html_
-        (Html.title_ (eBlogName env) <> Html.stylesheet_ (eStylesheetPath env))
-        ( Html.h_ 1 (Html.link_ "index.html" (Html.txt_ "Blog"))
-            <> Html.h_ 2 (Html.txt_ "Posts")
-            <> previews
-        )
+   in pure $
+        Html.html_
+          (Html.title_ (eBlogName env) <> Html.stylesheet_ (eStylesheetPath env))
+          ( Html.h_ 1 (Html.link_ "index.html" (Html.txt_ "Blog"))
+              <> Html.h_ 2 (Html.txt_ "Posts")
+              <> previews
+          )
 
 convertDirectory :: Env -> FilePath -> FilePath -> IO ()
 convertDirectory env inputDir outputDir = do
   DirContents filesToProcess filesToCopy <- getDirFilesAndContent inputDir
   createOutputDirectoryOrExit outputDir
-  let outputFiles = txtsToRenderedHtml env filesToProcess
+  let outputHtmls = runReader (txtsToRenderedHtml filesToProcess) env
   copyFiles outputDir filesToCopy
-  writeFiles outputDir outputFiles
+  writeFiles outputDir outputHtmls
   putStrLn "Done!"
 
 data DirContents = DirContents
@@ -106,18 +109,21 @@ confirm message = do
       putStrLn "Invalid response. Use y or n"
       confirm message
 
-txtsToRenderedHtml :: Env -> [(FilePath, String)] -> [(FilePath, String)]
-txtsToRenderedHtml env txtFiles =
+txtsToRenderedHtml :: [(FilePath, String)] -> Reader Env [(FilePath, String)]
+txtsToRenderedHtml txtFiles = do
   let txtOutputFiles = map toOutputMarkupFile txtFiles
-      index = ("index.html", buildIndex env txtOutputFiles)
-   in map (fmap Html.render) (index : map (convertFile env) txtOutputFiles)
+  index <- (,) "index.html" <$> buildIndex txtOutputFiles
+  htmlPages <- traverse convertFile txtOutputFiles
+  pure $ map (fmap Html.render) (index : htmlPages)
 
 toOutputMarkupFile :: (FilePath, String) -> (FilePath, Markup.Document)
 toOutputMarkupFile (file, content) =
   (takeBaseName file <.> "html", Markup.parse content)
 
-convertFile :: Env -> (FilePath, Markup.Document) -> (FilePath, Html.Html)
-convertFile env (file, doc) = (file, convert env file doc)
+convertFile :: (FilePath, Markup.Document) -> Reader Env (FilePath, Html.Html)
+convertFile (file, doc) = do
+  env <- ask
+  pure (file, convert env file doc)
 
 -- Copy files to a directory and log errors to stderr
 copyFiles :: FilePath -> [FilePath] -> IO ()

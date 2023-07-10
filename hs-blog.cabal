@@ -26,9 +26,10 @@ library
   hs-source-dirs: src
   build-depends:
     base,
-    optparse-applicative,
     directory,
-    filepath
+    filepath,
+    mtl,
+    optparse-applicative
   exposed-modules:
     HSBlog
       HSBlog.Convert

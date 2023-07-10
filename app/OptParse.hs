@@ -1,19 +1,20 @@
-module OptParse (
-  Options (..),
-  SingleInput (..),
-  SingleOutput (..),
-  parse,
-)
+module OptParse
+  ( Options (..),
+    SingleInput (..),
+    SingleOutput (..),
+    parse,
+  )
 where
 
 import Data.Maybe (fromMaybe)
+import HSBlog.Env
 import Options.Applicative
 
 -- CLI options
 
 data Options
   = ConvertSingle SingleInput SingleOutput
-  | ConvertDir FilePath FilePath
+  | ConvertDir FilePath FilePath Env
   deriving (Show)
 
 data SingleInput
@@ -33,25 +34,25 @@ parse = execParser opts
 
 pInputFile :: Parser SingleInput
 pInputFile = InputFile <$> parser
- where
-  parser =
-    strOption
-      ( long "input"
-          <> short 'i'
-          <> metavar "FILE"
-          <> help "Input file"
-      )
+  where
+    parser =
+      strOption
+        ( long "input"
+            <> short 'i'
+            <> metavar "FILE"
+            <> help "Input file"
+        )
 
 pOutputFile :: Parser SingleOutput
 pOutputFile = OutputFile <$> parser
- where
-  parser =
-    strOption
-      ( long "output"
-          <> short 'o'
-          <> metavar "FILE"
-          <> help "Output file"
-      )
+  where
+    parser =
+      strOption
+        ( long "output"
+            <> short 'o'
+            <> metavar "FILE"
+            <> help "Output file"
+        )
 
 pConvertSingle :: Parser Options
 pConvertSingle = ConvertSingle <$> pSingleInput <*> pSingleOutput
@@ -75,13 +76,39 @@ pOutputDir =
     )
 
 pConvertDir :: Parser Options
-pConvertDir = ConvertDir <$> pInputDir <*> pOutputDir
+pConvertDir = ConvertDir <$> pInputDir <*> pOutputDir <*> pEnv
 
 pSingleInput :: Parser SingleInput
 pSingleInput = fromMaybe Stdin <$> optional pInputFile
 
 pSingleOutput :: Parser SingleOutput
 pSingleOutput = fromMaybe Stdout <$> optional pOutputFile
+
+-- Parser for the environment
+pEnv :: Parser Env
+pEnv = Env <$> pBlogName <*> pStylesheet
+
+pBlogName :: Parser String
+pBlogName =
+  strOption
+    ( long "name"
+        <> short 'N'
+        <> metavar "STRING"
+        <> help "Blog name"
+        <> value (eBlogName defaultEnv)
+        <> showDefault
+    )
+
+pStylesheet :: Parser String
+pStylesheet =
+  strOption
+    ( long "style"
+        <> short 'S'
+        <> metavar "FILE"
+        <> help "Stylesheet filename"
+        <> value (eStylesheetPath defaultEnv)
+        <> showDefault
+    )
 
 -- Commands
 
