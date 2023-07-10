@@ -9,7 +9,11 @@ module HSBlog.Html
     ul_,
     ol_,
     code_,
-    -- append_,
+    txt_,
+    link_,
+    img_,
+    b_,
+    i_,
     render,
   )
 where
@@ -20,10 +24,15 @@ newtype Html = Html String
 
 newtype Structure = Structure String
 
+newtype Content = Content String
+
 type Title = String
 
 getStructureString :: Structure -> String
 getStructureString (Structure s) = s
+
+getContentString :: Content -> String
+getContentString (Content c) = c
 
 escape :: String -> String
 escape =
@@ -36,8 +45,29 @@ escape =
         _ -> [c]
    in concatMap escapeChar
 
+txt_ :: String -> Content
+txt_ = Content . escape
+
+link_ :: FilePath -> Content -> Content
+link_ path (Content content) =
+  Content $ elAttr "a" ("href=\"" <> escape path <> "\"") content
+
+img_ :: FilePath -> Content
+img_ path =
+  Content $ "<img src=\"" <> escape path <> "\" />"
+
+b_ :: Content -> Content
+b_ (Content content) = Content $ el "b" content
+
+i_ :: Content -> Content
+i_ (Content content) = Content $ el "i" content
+
 el :: String -> String -> String
 el tag content = "<" <> tag <> ">" <> content <> "</" <> tag <> ">"
+
+elAttr :: String -> String -> String -> String
+elAttr tag attrs content =
+  "<" <> tag <> " " <> attrs <> ">" <> content <> "</" <> tag <> ">"
 
 -- Replaced with Semigroup instance definition
 -- append_ :: Structure -> Structure -> Structure
@@ -65,11 +95,11 @@ html_ title (Structure content) =
 empty_ :: Structure
 empty_ = Structure ""
 
-p_ :: String -> Structure
-p_ = Structure . el "p" . escape
+p_ :: Content -> Structure
+p_ = Structure . el "p" . escape . getContentString
 
-h_ :: Natural -> String -> Structure
-h_ level = Structure . el ("h" <> show level) . escape
+h_ :: Natural -> Content -> Structure
+h_ level = Structure . el ("h" <> show level) . escape . getContentString
 
 ul_ :: [Structure] -> Structure
 ul_ = Structure . el "ul" . concatMap (el "li" . getStructureString)
@@ -79,8 +109,3 @@ ol_ = Structure . el "ol" . concatMap (el "li" . getStructureString)
 
 code_ :: String -> Structure
 code_ = Structure . el "pre" . escape
-
-concatStructure :: [Structure] -> Structure
-concatStructure list = case list of
-  [] -> mempty
-  x : xs -> x <> concatStructure xs
