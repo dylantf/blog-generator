@@ -1,1 +1,1 @@
-# haskell-blog
+blog
