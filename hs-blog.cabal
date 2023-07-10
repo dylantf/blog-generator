@@ -27,12 +27,14 @@ library
   build-depends:
     base,
     optparse-applicative,
-    directory
+    directory,
+    filepath
   exposed-modules:
     HSBlog
       HSBlog.Convert
       HSBlog.Html
       HSBlog.Markup
+      HSBlog.Directory
   -- other-modules:
 
 executable hs-blog-gen
@@ -45,6 +47,7 @@ executable hs-blog-gen
     base,
     directory,
     optparse-applicative,
+    filepath,
     hs-blog
   ghc-options:
     -O
