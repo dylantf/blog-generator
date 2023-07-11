@@ -42,8 +42,8 @@ convertDirectory env inputDir outputDir = do
   putStrLn "Done!"
 
 data DirContents = DirContents
-  { dcFilesToProcess :: [(FilePath, String)],
-    dcFilesToCopy :: [FilePath]
+  { dcFilesToProcess :: [(FilePath, String)]
+  , dcFilesToCopy :: [FilePath]
   }
 
 getDirFilesAndContent :: FilePath -> IO DirContents
@@ -51,7 +51,7 @@ getDirFilesAndContent inputDir = do
   files <- map (inputDir </>) <$> listDirectory inputDir
   let (txtFiles, otherFiles) = partition ((== ".txt") . takeExtension) files
   txtFilesAndContent <- applyIoOnList readFile txtFiles >>= filterAndReportFailures
-  pure $ DirContents {dcFilesToProcess = txtFilesAndContent, dcFilesToCopy = otherFiles}
+  pure $ DirContents{dcFilesToProcess = txtFilesAndContent, dcFilesToCopy = otherFiles}
 
 applyIoOnList :: (a -> IO b) -> [a] -> IO [(a, Either String b)]
 applyIoOnList action inputs =

@@ -48,8 +48,9 @@ executable hs-blog-gen
   build-depends:
     base,
     directory,
-    optparse-applicative,
+    mtl,
     filepath,
+    optparse-applicative,
     hs-blog
   ghc-options:
     -O

@@ -1,9 +1,9 @@
-module OptParse
-  ( Options (..),
-    SingleInput (..),
-    SingleOutput (..),
-    parse,
-  )
+module OptParse (
+  Options (..),
+  SingleInput (..),
+  SingleOutput (..),
+  parse,
+)
 where
 
 import Data.Maybe (fromMaybe)
@@ -34,25 +34,25 @@ parse = execParser opts
 
 pInputFile :: Parser SingleInput
 pInputFile = InputFile <$> parser
-  where
-    parser =
-      strOption
-        ( long "input"
-            <> short 'i'
-            <> metavar "FILE"
-            <> help "Input file"
-        )
+ where
+  parser =
+    strOption
+      ( long "input"
+          <> short 'i'
+          <> metavar "FILE"
+          <> help "Input file"
+      )
 
 pOutputFile :: Parser SingleOutput
 pOutputFile = OutputFile <$> parser
-  where
-    parser =
-      strOption
-        ( long "output"
-            <> short 'o'
-            <> metavar "FILE"
-            <> help "Output file"
-        )
+ where
+  parser =
+    strOption
+      ( long "output"
+          <> short 'o'
+          <> metavar "FILE"
+          <> help "Output file"
+      )
 
 pConvertSingle :: Parser Options
 pConvertSingle = ConvertSingle <$> pSingleInput <*> pSingleOutput
