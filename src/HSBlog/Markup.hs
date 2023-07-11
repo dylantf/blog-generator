@@ -11,7 +11,7 @@ data Structure
   | UnorderedList [String]
   | OrderedList [String]
   | CodeBlock [String]
-  deriving (Show)
+  deriving (Show, Eq)
 
 parse :: String -> Document
 parse = parseLines Nothing . lines

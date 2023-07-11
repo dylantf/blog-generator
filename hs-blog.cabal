@@ -1,56 +1,72 @@
-cabal-version: 2.4
-
-name: hs-blog
-version: 0.1.0.0
-synopsis: A custom blog generator from markup files
-description: yes, a blog generator
-homepage: https://github.com/dylantf/blog-generator
-bug-reports: https://github.com/dylantf/blog-generator/issues
-license: BSD-3-Clause
-license-file: LICENSE.txt
-author: dylan
-maintainer: dylan
-category: learning
-extra-doc-files:
-  README.md
+cabal-version:   2.4
+name:            hs-blog
+version:         0.1.0.0
+synopsis:        A custom blog generator from markup files
+description:     yes, a blog generator
+homepage:        https://github.com/dylantf/blog-generator
+bug-reports:     https://github.com/dylantf/blog-generator/issues
+license:         BSD-3-Clause
+license-file:    LICENSE.txt
+author:          dylan
+maintainer:      dylan
+category:        learning
+extra-doc-files: README.md
 
 common common-settings
-  default-language: Haskell2010
-  ghc-options:
-    -Wall
-  default-extensions:
-    ImportQualifiedPost
+  default-language:   Haskell2010
+  ghc-options:        -Wall
+  default-extensions: ImportQualifiedPost
 
 library
-  import: common-settings
-  hs-source-dirs: src
+  import:          common-settings
+  hs-source-dirs:  src
   build-depends:
-    base,
-    directory,
-    filepath,
-    mtl,
-    optparse-applicative
+    , base
+    , directory
+    , filepath
+    , mtl
+    , optparse-applicative
+
   exposed-modules:
     HSBlog
-      HSBlog.Convert
-      HSBlog.Env
-      HSBlog.Directory
-      HSBlog.Html
-      HSBlog.Markup
-  -- other-modules:
+    HSBlog.Convert
+    HSBlog.Directory
+    HSBlog.Env
+    HSBlog.Html
+    HSBlog.Markup
+
+-- other-modules:
 
 executable hs-blog-gen
-  import: common-settings
+  import:         common-settings
   hs-source-dirs: app
-  main-is: Main.hs
-  other-modules:
-    OptParse
+  main-is:        Main.hs
+  other-modules:  OptParse
   build-depends:
-    base,
-    directory,
-    mtl,
-    filepath,
-    optparse-applicative,
-    hs-blog
+    , base
+    , directory
+    , filepath
+    , hs-blog
+    , mtl
+    , optparse-applicative
+
+  ghc-options:    -O
+
+test-suite hs-blog-gen-test
+  import: common-settings
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is: Spec.hs
+
+  other-modules:
+    MarkupParsingSpec
+  build-depends:
+    , base
+    , hspec
+    , hspec-discover
+    , raw-strings-qq
+    , hs-blog
   ghc-options:
-    -O
+    -O -threaded -rtsopts -with-rtsopts=-N
+  build-tool-depends:
+    hspec-discover:hspec-discover

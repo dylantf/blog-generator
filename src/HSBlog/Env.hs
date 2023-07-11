@@ -1,8 +1,8 @@
 module HSBlog.Env (Env (..), defaultEnv) where
 
 data Env = Env
-  { eBlogName :: String
-  , eStylesheetPath :: FilePath
+  { eBlogName :: String,
+    eStylesheetPath :: FilePath
   }
   deriving (Show)
 
